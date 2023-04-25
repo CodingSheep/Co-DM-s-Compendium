@@ -1,4 +1,4 @@
-# Co-DM-s-Compendium
+# Co-DM's Compendium
 A Discord.py bot meant to aid me in D&amp;D 5e games ran over Discord.
 
 Project Goals:

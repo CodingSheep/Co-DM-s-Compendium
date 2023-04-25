@@ -1,20 +1,25 @@
 import asyncio
-import const
 import discord
 import mysql.connector
 import nacl
 
+from difflib import get_close_matches
 from discord import FFmpegPCMAudio, PCMVolumeTransformer
 from discord.ext import commands
 from mysql.connector import Error
-from difflib import get_close_matches
+
+DISCORD_KEY = os.environ['DISCORD_KEY']
+SQL_HOST = os.environ['SQL_HOST']
+SQL_DB = os.environ['SQL_DB']
+SQL_USER = os.environ['SQL_USER']
+SQL_PASS = os.environ['SQL_PASS']
 
 # Connect to the SQL server
 try:
-    connection = mysql.connector.connect(host=const.sqlHost,
-                                         database=const.sqlDB,
-                                         user=const.sqlUser,
-                                         password=const.sqlPass)
+    connection = mysql.connector.connect(host=SQL_HOST,
+                                         database=SQL_DB,
+                                         user=SQL_USER,
+                                         password=SQL_PASS)
 except Error as e:
     print(f"Error while connecting to MySQL: {e}")
     exit()

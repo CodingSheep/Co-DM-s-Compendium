@@ -123,4 +123,4 @@ async def play_sound(ctx, creature_name, subset=None):
         await asyncio.sleep(1)
 
 # Run the Discord bot
-client.run(const.discordKey)
+client.run(DISCORD_KEY)

@@ -1,6 +1,7 @@
 import asyncio
 import discord
 import mysql.connector
+import os
 import nacl
 
 from difflib import get_close_matches

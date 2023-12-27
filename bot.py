@@ -12,7 +12,11 @@ client = commands.Bot(intents=intents, command_prefix='!')
 
 @client.event
 async def setup_hook() -> None:
-    await client.load_extension('cogs.play_sound')
+    for cog in os.listdir('./cogs'):
+        if cog.endswith('.py'):
+            extension = f'cogs.{cog[:-3]}'
+            print(f'Loading Extension: {extension}...')
+            await client.load_extension(extension)
 
 
 # Run the Discord bot

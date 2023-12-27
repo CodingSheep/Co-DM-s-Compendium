@@ -1,3 +1,5 @@
 __pycache__/
+data/*
+cogs/extract_text.py
+notebooks/*
 Sounds/*
-Testing Notebook.ipynb

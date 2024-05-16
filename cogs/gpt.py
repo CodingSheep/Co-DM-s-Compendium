@@ -1,5 +1,6 @@
 import asyncio
 import discord
+import json
 import os
 import time
 
@@ -47,6 +48,11 @@ class GPT(commands.Cog, name='gpt'):
                 return 'Request expired.', True
             case default:
                 return f'Unknown status: {run.status}', True
+
+    def check_markdown(self, res):
+        if res[:3] == '```':
+            return res[8:-3]
+        return res
         
         
     @commands.command(name='generate')
@@ -61,50 +67,36 @@ class GPT(commands.Cog, name='gpt'):
             case 'tavern':
                 request = f'''
                     Generate a Tavern with 3 NPCs. {context}
-                    
-                    The output must be in the following format:
-                    
-                    Tavern Name: **[Name]**
-                    [Description]
 
-                    For each NPC, use the following format
-                    
-                    NPC: [Name], [Role, if any] ([Race] [Class])
-                    - [Description]
+                    Format the output as a list of 2 objects: The Tavern and the NPCs.
+                    For the Tavern, format the output as a JSON object with the keys Name, Location, and Description.
+                    For each NPC, format the output as a JSON object with the keys Name, Role, and Description.
+
+                    Limit the Location value for the Tavern as the name of a City, Country, or Geographical Location.
                     '''
             case 'npc':
                 request = f'''
                     Generate a NPC, limiting the description to 2-3 sentences. {context}
                     
-                    The output must be in the following format:
-                    
-                    NPC: [Name], [Role, if any] ([Race] [Class])
-                    - [Description]
+                    Format the output as a JSON object with the keys Name, Role, Location, and Description.
+                    Limit the Location value for the NPC as the name of a City, Country, or Geographical Location.
                     '''
             case 'bounty':
                 request = f'''
                     Generate a bounty. {context}
 
-                    The output must be in the following format:
-
-                    Quest: [Name]
-                    - Reward: [Reward]
-                    - [Description]
+                    Format the output as a JSON object with the keys Quest, Recommended Level, and Description.
                     '''
             case 'city':
                 if len(context) == 0:
                     await ctx.send(f'To generate a city, please provide context.')
                     return
                 request = f'''
-                    Generate districts for the following city: {context}
+                    Generate a description and districts for the following city: {context}
 
-                    The output must be in the following format:
-
-                    District 1: [Name]
-                    - [Description]
-                    District 2: [Name]
-                    - [Description]
-                    ...
+                    Format the output as a JSON object with the keys Name, Location, Description, and (if applicable) Districts.
+                    If Districts are applicable, the Districts object must be a list of tuples with the keys Name and Description.
+                    Limit the Location value for the City as the name of a Country or Geographical Location.
                     '''
             case 'location':
                 if len(context) == 0:
@@ -113,10 +105,8 @@ class GPT(commands.Cog, name='gpt'):
                 request = f'''
                     Generate a description for the following locale: {context}
 
-                    The output must be in the following format:
-
-                    [Name]
-                    - [Description]
+                    Format the output as a JSON object with the keys Name, Location, and Description.
+                    Limit the Location value for the Tavern as the name of a Country.
                     '''
             case default:
                 await ctx.send(f"Subtype \"{subtype}\" does not exist. Valid Subtypes are: Tavern, NPC, Bounty, City, Location.")
@@ -130,14 +120,24 @@ class GPT(commands.Cog, name='gpt'):
         # Check for Error
         if err:
             await ctx.send(f'Error: {res}')
-        # If no error, check if output is longer than what Discord allows.
-        # Use premade formats to react accordingly
-        elif len(res) > 2000:
-            sections = res.split('\n\n')
-            for section in sections:
-                await ctx.send(section)
-        else:
-            await ctx.send(res)
+            return
+
+        # Sanity Check 1: If no Error, ensure GPT output isn't surrounded in Markdown before translating to JSON Object
+        res = self.check_markdown(res)
+
+        # To save later
+        self.bot.output = json.loads(res)
+
+        # TEMPORARY: Ensure Markdown wrapping for res
+        res = f'```json\n{res}\n```'
+        await ctx.send(res)
+        
+        # # Legacy: Changed format output. Will circle back to
+        # # CRITICAL BUG TO SOLVE IF IT COMES UP: WHAT HAPPENS IF THE JSON OUTPUT IS BIGGER THAN THIS?!
+        # if len(res) > 2000:
+        #     sections = res.split('\n\n')
+        #     for section in sections:
+        #         await ctx.send(section)
             
 async def setup(client) -> None:
     await client.add_cog(GPT(client))

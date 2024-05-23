@@ -1,22 +1,16 @@
 # Co-DM's Compendium
-A Discord.py bot meant to aid me in TTRPG games ran over Discord.
+A Discord.py bot meant to aid Game Masters in TTRPG games by assisting in the creation and storage of NPCs, Towns, Locations, and more using ChatGPT and SQL.
 
 ## Features
-- **Sound Effects**
-  - Play sounds in Discord voice channels using commands without interrupting existing music bots.
-  - Integration with a SQL server for sound management.
 - **ChatGPT Integration**
-  - Generate NPCs, cities, locales, bounties, and taverns with or without added context using the OpenAI API.
+  - Generate NPCs, cities, locales, bounties, and more with or without added context using OpenAI's ChatGPT API.
   - Context-aware responses for more immersive storytelling.
 - **Data Persistance**
   - Save generated responses in a SQL server for future reference.
 
 ## TODO (In no particular order):
-- Advanced Context for ChatGPT
+- Continued Advanced Context for ChatGPT
   - Explore and implement advanced context handling for more dynamic and evolving narratives.
-- Google Bard Integration
-  - Create an implementation of existing ChatGPT functionality using Google Bard once an API is released, to take advangate of its (currently) unlimited free usage. 
-- SQL Server Optimization
-  - Optimize the SQL server integration for improved performance and scalability.
-- Error Handling and Logging
-  - Enhance error handling and implement comprehensive logging for better debugging.
+- Google Gemini Integration
+  - Create an implementation of existing ChatGPT functionality using Google Gemini once an API is released.
+  - General conclusions online mark Gemini as being better at creative writing. This makes it an interesting choice

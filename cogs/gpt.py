@@ -4,6 +4,7 @@ import json
 import os
 import time
 
+from bot import generated_data
 from discord.ext import commands
 from openai import OpenAI
 
@@ -55,7 +56,7 @@ class GPT(commands.Cog, name='gpt'):
         return res
         
         
-    @commands.command(name='generate')
+    @commands.command(name='generate_gpt')
     async def generate(self, ctx, subtype='tavern', *, context=''):
         subtype = subtype.lower()
 
@@ -126,18 +127,11 @@ class GPT(commands.Cog, name='gpt'):
         res = self.check_markdown(res)
 
         # To save later
-        self.bot.output = json.loads(res)
+        generated_data = json.loads(res)
 
         # TEMPORARY: Ensure Markdown wrapping for res
         res = f'```json\n{res}\n```'
         await ctx.send(res)
-        
-        # # Legacy: Changed format output. Will circle back to
-        # # CRITICAL BUG TO SOLVE IF IT COMES UP: WHAT HAPPENS IF THE JSON OUTPUT IS BIGGER THAN THIS?!
-        # if len(res) > 2000:
-        #     sections = res.split('\n\n')
-        #     for section in sections:
-        #         await ctx.send(section)
             
 async def setup(client) -> None:
     await client.add_cog(GPT(client))

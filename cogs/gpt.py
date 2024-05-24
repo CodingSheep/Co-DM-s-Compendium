@@ -4,7 +4,7 @@ import json
 import os
 import time
 
-from bot import generated_data
+# from bot import generated_data
 from discord.ext import commands
 from openai import OpenAI
 
@@ -51,10 +51,11 @@ class GPT(commands.Cog, name='gpt'):
                 return f'Unknown status: {run.status}', True
 
     def check_markdown(self, res):
-        if res[:3] == '```':
-            return res[8:-3]
+        if res.startswith("```") and res.endswith("```"):
+            res = res[3:-3].strip()
+            if res.startswith("json"):
+                res = res[4:].strip()
         return res
-        
         
     @commands.command(name='generate_gpt')
     async def generate(self, ctx, subtype='tavern', *, context=''):
@@ -75,6 +76,7 @@ class GPT(commands.Cog, name='gpt'):
 
                     Limit the Location value for the Tavern as the name of a City, Country, or Geographical Location.
                     '''
+                table='locations'
             case 'npc':
                 request = f'''
                     Generate a NPC, limiting the description to 2-3 sentences. {context}
@@ -82,12 +84,14 @@ class GPT(commands.Cog, name='gpt'):
                     Format the output as a JSON object with the keys Name, Role, Location, and Description.
                     Limit the Location value for the NPC as the name of a City, Country, or Geographical Location.
                     '''
+                table='npcs'
             case 'bounty':
                 request = f'''
                     Generate a bounty. {context}
 
                     Format the output as a JSON object with the keys Quest, Recommended Level, and Description.
                     '''
+                table = ''
             case 'city':
                 if len(context) == 0:
                     await ctx.send(f'To generate a city, please provide context.')
@@ -99,6 +103,7 @@ class GPT(commands.Cog, name='gpt'):
                     If Districts are applicable, the Districts object must be a list of tuples with the keys Name and Description.
                     Limit the Location value for the City as the name of a Country or Geographical Location.
                     '''
+                table='cities'
             case 'location':
                 if len(context) == 0:
                     await ctx.send(f'To generate a description for a location, please provide context.')
@@ -109,6 +114,7 @@ class GPT(commands.Cog, name='gpt'):
                     Format the output as a JSON object with the keys Name, Location, and Description.
                     Limit the Location value for the Tavern as the name of a Country.
                     '''
+                table='locations'
             case default:
                 await ctx.send(f"Subtype \"{subtype}\" does not exist. Valid Subtypes are: Tavern, NPC, Bounty, City, Location.")
                 return
@@ -125,13 +131,17 @@ class GPT(commands.Cog, name='gpt'):
 
         # Sanity Check 1: If no Error, ensure GPT output isn't surrounded in Markdown before translating to JSON Object
         res = self.check_markdown(res)
-
         # To save later
-        generated_data = json.loads(res)
+        self.bot.generated_data = {table: json.loads(res)}
 
-        # TEMPORARY: Ensure Markdown wrapping for res
-        res = f'```json\n{res}\n```'
-        await ctx.send(res)
+        if len(res) <= 2000:
+            # TEMPORARY: Ensure Markdown wrapping for res
+            res = f'```json\n{res}\n```'
+            await ctx.send(res)
+        else:
+            res = json.loads(res)
+            for key in res.keys():
+                await ctx.send(f'```json\n{key}: {res[key]}```')
             
 async def setup(client) -> None:
     await client.add_cog(GPT(client))

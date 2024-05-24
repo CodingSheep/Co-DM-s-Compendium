@@ -3,3 +3,4 @@ data/*
 cogs/extract_text.py
 notebooks/*
 Sounds/*
+config.json

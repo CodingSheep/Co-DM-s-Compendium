@@ -1,28 +1,20 @@
 import asyncio
 import discord
-import mysql.connector
 import os
 
 
 from difflib import get_close_matches
 from discord import FFmpegPCMAudio, PCMVolumeTransformer
 from discord.ext import commands
-from mysql.connector import Error
 
 class Sounds(commands.Cog, name='sounds'):
     def __init__(self, bot):
         self.bot = bot
         self.voice_client = None
 
-        # Connect to the SQL server
-        try:
-            self.connection = mysql.connector.connect(host=os.environ['SQL_HOST'],
-                                                      database=os.environ['SQL_DB'],
-                                                      user=os.environ['SQL_USER'],
-                                                      password=os.environ['SQL_PASS'])
-        except Error as e:
-            print(f"Error while connecting to MySQL: {e}")
-            exit()
+        # Database connection
+        self.connection = self.bot.db.connection
+        self.cursor = self.bot.db.cursor
     
     @commands.command(name='join')
     async def join(self, ctx):

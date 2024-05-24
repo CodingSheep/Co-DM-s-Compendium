@@ -1,65 +1,69 @@
 import asyncio
 import discord
+import json
 import mysql.connector
 import os
 
 from discord.ext import commands
+from utils.infocard import InfoCard
 
 class Compendium(commands.Cog, name='compendium'):
-    def __init__(self, bot):
-        self.bot = bot
-        
-        
-        # Connect to the SQL server
-        try:
-            self.connection = mysql.connector.connect(host=os.environ['SQL_HOST'],
-                                                      database=os.environ['SQL_DB'],
-                                                      user=os.environ['SQL_USER'],
-                                                      password=os.environ['SQL_PASS'])
-        except Error as e:
-            print(f"Error while connecting to MySQL: {e}")
-            exit()
+    def __init__(self, bot: commands.Bot):
+        self.client = bot
+        self.db = bot.db
 
     # TODO: Get Info from item in SQL server
     # Implement once saving is properly implemented
     @commands.command(name='info')
-    async def info(self, ctx, subtype = '', *, name = ''):
+    async def info(self, ctx, *, name = ''):
+        res = self.db.search(name)
+        if list(res.keys())[0] == 'message':
+            await ctx.send(res)
+            return
         
-        subtype = subtype.lower()
+        card = InfoCard(res)
+        await ctx.send(embed=card.info())
 
-        print(self.bot.output)
-
-        # Search through multiple tables based on input?
-        # See if better system for searching through table for "thing like" instead of pulling whole table.
-        
-        # if not subtype or not name:
-        #     await ctx.send('subtype and name must not be empty.')
-        #     return
-        # if subtype not in ['tavern', 'npc', 'city', 'location']:
-        #     await ctx.send(f'Subtype "{subtype}" is not valid. Valid Subtypes are: Tavern, NPC, City, Location')
-        #     return
-        
-        # output = self.print_results(subtype, name)
-        # await ctx.send(output)
-        await ctx.send(self.bot.output)
+    @commands.command(name='check')
+    async def check(self, ctx):
+        await ctx.send(self.client.generated_data)
 
     # TODO: Expand on saving items to server
     @commands.command(name='save')
     async def save(self, ctx):
         # Delete Command Message
         await ctx.message.delete()
-        
-        # TODO:
-        # 1) Read last 2 messages to gain context of last command sent
-        # 2) Check if command was GPT generation (!generate). If so, start processing. Else, ignore
-        # 3) Parse text to include at least [Name], [Description]
-        # 3.1) NPC Table: [Name], [Race Class], [Description]
-        # 3.2) Tavern Table: [Name], [City], [Description]
-        # 3.3) City/Locale Table: [Name], [Country], [Description]
-        # 3.3.1) Districts can be looped into the description of Cities.
-        # 3.4) Bounties do not need to be saved
-        # Once the data is saved, output a response saying as much
-        await ctx.send('Saved!')
+
+        # Check if we have a saved object in memory
+        data = self.client.generated_data
+        if data:
+            # If not city with districts, we're fine and can continue as normal
+            if list(data.keys())[0] is not 'cities':
+                table = list(self.client.generated_data.keys())[0]
+                object = list(self.client.generated_data.values())[0]
+    
+                if not table:
+                    await ctx.send('Bounties are not saved currently.')
+                    return
+                res = self.db.save(table, object)
+                await ctx.send(f'Saving {object["Name"]} to Table {table}.')
+            else:
+                object = {
+                    'Name': data['cities']['Name'],
+                    'Location': data['cities']['Location'],
+                    'Description': data['cities']['Description']
+                }
+                res = self.db.save('cities', object)
+                await ctx.send(f'Saving {object["Name"]} to Table cities.')
+
+                # Now we deal with districts
+                city_id = self.db.cursor.lastrowid
+                for district in data['cities']['Districts']:
+                    district['CityID'] = city_id
+                    res = self.db.save('districts', district)
+                    await ctx.send(f'Saving {district["Name"]} to Table districts.')
+        else:
+            await ctx.send('No Generated Object currently in memory! Please provide something')
     
     # TODO: Pass Info in for HTML formatting
     # TODO: Move above commands?

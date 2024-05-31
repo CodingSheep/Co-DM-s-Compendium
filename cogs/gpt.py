@@ -14,7 +14,7 @@ class GPT(commands.Cog, name='gpt'):
         
         # OpenAI setup
         self.client = OpenAI()
-        self.assistant = self.client.beta.assistants.retrieve(os.environ['CODM'])
+        self.assistant = self.client.beta.assistants.retrieve(bot.config['GPT_KEY'])
         self.thread = self.client.beta.threads.create()
         
     def send_request(self, request):

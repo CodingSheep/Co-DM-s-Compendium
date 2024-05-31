@@ -17,6 +17,7 @@ class Client(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='!', intents=discord.Intents.all())
         self.generated_data = {}
+        self.config = config
 
     async def setup_hook(self) -> None:
         print(f'{time.strftime("%H:%M:%S UTC", time.gmtime())}')
@@ -25,7 +26,7 @@ class Client(commands.Bot):
         print(f'Discord Version: {discord.__version__}')
 
         self.command_cogs = [f'cogs.{cog[:-3]}' for cog in os.listdir('./cogs') if cog.endswith('.py')]
-        self.db = Database(config)
+        self.db = Database(self.config)
 
         for cog in self.command_cogs:
             print(f'Loading Extension: {cog}...')
